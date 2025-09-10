@@ -5,7 +5,7 @@ public static class Arrays
 {
     /// <summary>
     /// This function will produce an array of size 'length' starting with 'number' followed by multiples of 'number'.
-    /// For example, MultiplesOf(7, 5) -> {7, 14, 21, 28, 35}.
+    /// For example, MultiplesOf(7, 5) -> {7, 14, 21, 28, 35, 42}.
     /// Assume that length is a positive integer greater than 0.
     /// </summary>
     /// <returns>array of doubles that are the multiples of the supplied number</returns>
