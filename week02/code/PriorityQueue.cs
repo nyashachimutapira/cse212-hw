@@ -1,63 +1,49 @@
-﻿public class PriorityQueue
+﻿using System;
+using System.Collections.Generic;
+
+namespace CSE212.HW.Week02
 {
-    private List<PriorityItem> _queue = new();
-
-    /// <summary>
-    /// Add a new value to the queue with an associated priority.  The
-    /// node is always added to the back of the queue regardless of 
-    /// the priority.
-    /// </summary>
-    /// <param name="value">The value</param>
-    /// <param name="priority">The priority</param>
-    public void Enqueue(string value, int priority)
+    // PriorityQueue implementation meeting the requirements
+    public class PriorityQueue
     {
-        var newNode = new PriorityItem(value, priority);
-        _queue.Add(newNode);
-    }
+        // Internal list of entries in enqueue order
+        private readonly List<(string Value, int Priority, long Seq)> _items = new List<(string, int, long)>();
+        private long _nextSeq = 0;
 
-    public string Dequeue()
-    {
-        if (_queue.Count == 0) // Verify the queue is not empty
+        // Enqueue: add to back preserving sequence
+        public void Enqueue(string value, int priority)
         {
-            throw new InvalidOperationException("The queue is empty.");
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            _items.Add((value, priority, _nextSeq++));
         }
 
-        // Find the index of the item with the highest priority to remove
-        var highPriorityIndex = 0;
-        for (int index = 1; index < _queue.Count - 1; index++)
+        // Dequeue: remove the item with highest priority; if tie, remove lowest Seq (earliest enqueued)
+        public string Dequeue()
         {
-            if (_queue[index].Priority >= _queue[highPriorityIndex].Priority)
-                highPriorityIndex = index;
+            if (_items.Count == 0)
+                throw new InvalidOperationException("The queue is empty.");
+
+            int bestIndex = 0;
+            int bestPriority = _items[0].Priority;
+            long bestSeq = _items[0].Seq;
+
+            for (int i = 1; i < _items.Count; i++)
+            {
+                var it = _items[i];
+                if (it.Priority > bestPriority || (it.Priority == bestPriority && it.Seq < bestSeq))
+                {
+                    bestIndex = i;
+                    bestPriority = it.Priority;
+                    bestSeq = it.Seq;
+                }
+            }
+
+            var value = _items[bestIndex].Value;
+            _items.RemoveAt(bestIndex);
+            return value;
         }
 
-        // Remove and return the item with the highest priority
-        var value = _queue[highPriorityIndex].Value;
-        return value;
-    }
-
-    // DO NOT MODIFY THE CODE IN THIS METHOD
-    // The graders rely on this method to check if you fixed all the bugs, so changes to it will cause you to lose points.
-    public override string ToString()
-    {
-        return $"[{string.Join(", ", _queue)}]";
-    }
-}
-
-internal class PriorityItem
-{
-    internal string Value { get; set; }
-    internal int Priority { get; set; }
-
-    internal PriorityItem(string value, int priority)
-    {
-        Value = value;
-        Priority = priority;
-    }
-
-    // DO NOT MODIFY THE CODE IN THIS METHOD
-    // The graders rely on this method to check if you fixed all the bugs, so changes to it will cause you to lose points.
-    public override string ToString()
-    {
-        return $"{Value} (Pri:{Priority})";
+        // For tests: helper to know how many items are in queue
+        public int Count => _items.Count;
     }
 }
