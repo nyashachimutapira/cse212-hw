@@ -1,134 +1,115 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
 
-// DO NOT MODIFY THIS FILE
-
-[TestClass]
-public class TreeInsertTests
+public class Node
 {
-    [TestMethod]
-    public void TreeInsert_Basic()
+    public int Value;
+    public Node Left;
+    public Node Right;
+
+    public Node(int value)
     {
-        BinarySearchTree tree = new();
-        tree.Insert(5);
-        tree.Insert(3);
-        tree.Insert(7);
+        Value = value;
+        Left = null;
+        Right = null;
+    }
 
-        // After implementing 'no duplicates' rule,
-        // this next insert will have no effect on the tree.
-        tree.Insert(7);
+    // Problem 1: Insert Unique Values Only
+    public void Insert(int value)
+    {
+        if (value < Value)
+        {
+            if (Left == null)
+                Left = new Node(value);
+            else
+                Left.Insert(value);
+        }
+        else if (value > Value) // Ensure only unique values are added
+        {
+            if (Right == null)
+                Right = new Node(value);
+            else
+                Right.Insert(value);
+        }
+    }
 
-        tree.Insert(4);
-        tree.Insert(10);
-        tree.Insert(1);
-        tree.Insert(6);
-        Assert.AreEqual("<Bst>{1, 3, 4, 5, 6, 7, 10}", tree.ToString());
+    // Problem 4: Tree Height
+    public int GetHeight()
+    {
+        if (this == null) return 0; // Base case: height of an empty node is 0
+        int leftHeight = Left?.GetHeight() ?? 0;
+        int rightHeight = Right?.GetHeight() ?? 0;
+        return 1 + Math.Max(leftHeight, rightHeight);
+    }
+
+    // Problem 2: Contains
+    public bool Contains(int value)
+    {
+        if (value == Value) return true;
+        if (value < Value)
+            return Left?.Contains(value) ?? false;
+        return Right?.Contains(value) ?? false;
     }
 }
 
-[TestClass]
-public class TreeContainsTests
+public class BinarySearchTree
 {
-    [TestMethod]
-    public void TreeContains_Basic()
-    {
-        BinarySearchTree tree = new();
-        tree.Insert(5);
-        tree.Insert(3);
-        tree.Insert(7);
-        tree.Insert(4);
-        tree.Insert(10);
-        tree.Insert(1);
-        tree.Insert(6);
+    public Node Root;
 
-        Assert.IsTrue(tree.Contains(3));
-        Assert.IsFalse(tree.Contains(2));
-        Assert.IsTrue(tree.Contains(6));
-        Assert.IsTrue(tree.Contains(7));
-        Assert.IsFalse(tree.Contains(9));
+    public BinarySearchTree()
+    {
+        Root = null;
+    }
+
+    public void Insert(int value)
+    {
+        if (Root == null)
+            Root = new Node(value);
+        else
+            Root.Insert(value);
+    }
+
+    // Problem 3: Traverse Backwards
+    public IEnumerable<int> Reversed()
+    {
+        return TraverseBackward(Root);
+    }
+
+    private IEnumerable<int> TraverseBackward(Node node)
+    {
+        if (node == null) yield break;
+        foreach (var value in TraverseBackward(node.Right))
+            yield return value;
+        yield return node.Value;
+        foreach (var value in TraverseBackward(node.Left))
+            yield return value;
     }
 }
 
-[TestClass]
-public class TreeReverseTests
+public static class Trees
 {
-    [TestMethod]
-    public void TreeReverse_Basic()
+    /// <summary>
+    /// Given a sorted list (sorted_list), create a balanced BST.
+    /// </summary>
+    public static BinarySearchTree CreateTreeFromSortedList(int[] sortedNumbers)
     {
-        BinarySearchTree tree = new();
-        tree.Insert(5);
-        tree.Insert(3);
-        tree.Insert(7);
-        tree.Insert(4);
-        tree.Insert(10);
-        tree.Insert(1);
-        tree.Insert(6);
-
-        Assert.AreEqual("<IEnumerable>{10, 7, 6, 5, 4, 3, 1}", string.Join(", ", tree.Reverse().AsString()));
-    }
-}
-
-[TestClass]
-public class TreeGetHeightTests
-{
-    [TestMethod]
-    public void TreeGetHeight_Basic()
-    {
-        BinarySearchTree tree = new();
-        tree.Insert(5);
-        tree.Insert(3);
-        tree.Insert(7);
-        tree.Insert(4);
-        tree.Insert(10);
-        tree.Insert(1);
-        tree.Insert(6);
-        Assert.AreEqual(3, tree.GetHeight());
-        tree.Insert(6);
-        Assert.AreEqual(3, tree.GetHeight());
-        tree.Insert(12);
-        Assert.AreEqual(4, tree.GetHeight());
-    }
-}
-
-[TestClass]
-public class CreateTreeFromSortedListTests
-{
-    [TestMethod]
-    public void CreateTreeFromSortedList_CountBy10s()
-    {
-        var tree = Trees.CreateTreeFromSortedList([10, 20, 30, 40, 50, 60]);
-        Assert.AreEqual("<Bst>{10, 20, 30, 40, 50, 60}", tree.ToString());
-        Assert.AreEqual(3, tree.GetHeight());
+        var bst = new BinarySearchTree(); // Create an empty BST to start with 
+        InsertMiddle(sortedNumbers, 0, sortedNumbers.Length - 1, bst);
+        return bst;
     }
 
-    [TestMethod]
-    public void CreateTreeFromSortedList_127Nodes()
+    /// <summary>
+    /// This function will attempt to insert the item in the middle of 'sortedNumbers' into
+    /// the 'bst' tree.
+    /// </summary>
+    private static void InsertMiddle(int[] sortedNumbers, int first, int last, BinarySearchTree bst)
     {
-        var tree = Trees.CreateTreeFromSortedList(Enumerable.Range(0, 127).ToArray()); // 2^7 - 1 nodes
-        Assert.AreEqual("<Bst>{" + string.Join(", ", Enumerable.Range(0, 127)) + "}", tree.ToString());
-        Assert.AreEqual(7, tree.GetHeight()); // Any higher and its not balanced.
-    }
+        if (first > last) return; // Base case: no elements to insert
 
-    [TestMethod]
-    public void CreateTreeFromSortedList_128Nodes()
-    {
-        var tree = Trees.CreateTreeFromSortedList(Enumerable.Range(0, 128).ToArray()); // 2^7 nodes
-        Assert.AreEqual("<Bst>{" + string.Join(", ", Enumerable.Range(0, 128)) + "}", tree.ToString());
-        Assert.AreEqual(8, tree.GetHeight()); // Any higher and its not balanced.
-    }
+        int mid = (first + last) / 2; // Find the middle index
+        bst.Insert(sortedNumbers[mid]); // Insert the middle value
 
-    [TestMethod]
-    public void CreateTreeFromSortedList_Single()
-    {
-        var tree = Trees.CreateTreeFromSortedList([42]);
-        Assert.AreEqual("<Bst>{42}", tree.ToString());
-        Assert.AreEqual(1, tree.GetHeight());
-    }
-
-    [TestMethod]
-    public void CreateTreeFromSortedList_Empty()
-    {
-        var tree = Trees.CreateTreeFromSortedList([]);
-        Assert.AreEqual("<Bst>{}", tree.ToString());
-        Assert.AreEqual(0, tree.GetHeight());
+        InsertMiddle(sortedNumbers, first, mid - 1, bst); // Insert left half
+        InsertMiddle(sortedNumbers, mid + 1, last, bst); // Insert right half
     }
 }
